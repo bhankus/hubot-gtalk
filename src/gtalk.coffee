@@ -132,12 +132,14 @@ class Gtalkbot extends Adapter
 
       # Prefix message if there is no match
       unless message.match(newRegex)
+        console.log "^^^^^^^^^^ Gtalkbot handleMessage in unless message.match message=" + message
         message = (@name + " " ) + message
 
     console.log "^^^^^^^^^^ Gtalkbot handleMessage now message=" + message
     
     # Send the message to the robot
     user = @getUser jid
+    console.log "^^^^^^^^^^ Gtalkbot handleMessage user=" + user
     user.type = stanza.attrs.type
 
     @receive new TextMessage(user, message)
@@ -205,10 +207,12 @@ class Gtalkbot extends Adapter
 
     # This can change from request to request
     user.resource = jid.resource
+    console.log "^^^^^^^^^^ Gtalkbot getUser returning user=" + user
     return user
 
   isMe: (jid) ->
     console.log "^^^^^^^^^^ Gtalkbot isMe start"
+    console.log "^^^^^^^^^^ Gtalkbot isMe returning " + jid.from() == @options.username
     return jid.from() == @options.username
 
   ignoreUser: (jid) ->
