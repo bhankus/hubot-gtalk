@@ -4,6 +4,7 @@ Xmpp    = require 'node-xmpp'
 
 class Gtalkbot extends Adapter
   run: ->
+    console.log "^^^^^^^^^^ Gtalkbot run start"
     Xmpp.JID.prototype.from = -> @bare().toString()
 
     @name = @robot.name
@@ -36,6 +37,7 @@ class Gtalkbot extends Adapter
     @client.on 'error', (err) => @error(err)
 
   online: ->
+    console.log "^^^^^^^^^^ Gtalkbot online start"
     self = @
 
     @client.send new Xmpp.Element('presence')
@@ -51,6 +53,8 @@ class Gtalkbot extends Adapter
 
     self.emit "connected"
 
+    console.log "^^^^^^^^^^ Gtalkbot online connected"
+    
     # Check for buddy requests every so often
     @client.send roster_query
     setInterval =>
@@ -58,8 +62,9 @@ class Gtalkbot extends Adapter
     , @options.keepaliveInterval
 
   readStanza: (stanza) ->
+    console.log "^^^^^^^^^^ Gtalkbot stanza start"
     # Useful for debugging
-    # console.log stanza
+    console.log stanza
 
     # Check for erros
     if stanza.attrs.type is 'error'
@@ -82,8 +87,11 @@ class Gtalkbot extends Adapter
       return
 
   handleMessage: (stanza) ->
+    console.log "^^^^^^^^^^ Gtalkbot handleMessage start"
+    console.log "^^^^^^^^^^ Gtalkbot handleMessage stanza=" + stanza
     jid = new Xmpp.JID(stanza.attrs.from)
-
+    console.log "^^^^^^^^^^ Gtalkbot handleMessage jid=" + jid
+    
     if @isMe(jid)
       return
 
@@ -98,26 +106,36 @@ class Gtalkbot extends Adapter
     return unless body
 
     message = body.getText()
+    console.log "^^^^^^^^^^ Gtalkbot handleMessage message=" + message
 
     # If we've configured some regexp transformations, apply them on the message
     if @options.regexpTrans?
+      console.log "^^^^^^^^^^ Gtalkbot handleMessage in regexpTrans"
       [reg, trans] = @options.regexpTrans.split("|")
       message = message.replace(new RegExp(reg), trans)
+      console.log "^^^^^^^^^^ Gtalkbot handleMessage after replace message=" + message
 
     # Pad the message with robot name just incase it was not provided.
     # Only pad if this is a direct chat
     if stanza.attrs.type is 'chat'
       # Following the same name matching pattern as the Robot
       if @robot.alias
+        console.log "^^^^^^^^^^ Gtalkbot handleMessage in robot alise"
         alias = @robot.alias.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') # escape alias for regexp
+        console.log "^^^^^^^^^^ Gtalkbot handleMessage robot alias=" + alias
         newRegex = new RegExp("^(?:#{@robot.alias}[:,]?|#{@name}[:,]?)", "i")
+        console.log "^^^^^^^^^^ Gtalkbot handleMessage newRegex=" + newRegex
       else
+        console.log "^^^^^^^^^^ Gtalkbot handleMessage NOT robot alias"
         newRegex = new RegExp("^#{@name}[:,]?", "i")
+        console.log "^^^^^^^^^^ Gtalkbot handleMessage newRegex=" + newRegex
 
       # Prefix message if there is no match
       unless message.match(newRegex)
         message = (@name + " " ) + message
 
+    console.log "^^^^^^^^^^ Gtalkbot handleMessage now message=" + message
+    
     # Send the message to the robot
     user = @getUser jid
     user.type = stanza.attrs.type
@@ -125,6 +143,7 @@ class Gtalkbot extends Adapter
     @receive new TextMessage(user, message)
 
   handlePresence: (stanza) ->
+    console.log "^^^^^^^^^^ Gtalkbot handlePresence start"
     jid = new Xmpp.JID(stanza.attrs.from)
 
     if @isMe(jid)
@@ -178,6 +197,7 @@ class Gtalkbot extends Adapter
         @receive new LeaveMessage(user)
 
   getUser: (jid) ->
+    console.log "^^^^^^^^^^ Gtalkbot getUser start"
     user = @userForId jid.from(),
       name: jid.user
       user: jid.user
@@ -188,9 +208,11 @@ class Gtalkbot extends Adapter
     return user
 
   isMe: (jid) ->
+    console.log "^^^^^^^^^^ Gtalkbot isMe start"
     return jid.from() == @options.username
 
   ignoreUser: (jid) ->
+    console.log "^^^^^^^^^^ Gtalkbot ignoreUser start"
     if @options.acceptDomains.length < 1 and @options.acceptUsers.length < 1
       return false
 
@@ -205,6 +227,7 @@ class Gtalkbot extends Adapter
     return ignore
 
   send: (envelope, strings...) ->
+    console.log "^^^^^^^^^^ Gtalkbot send start"
     for str in strings
       message = new Xmpp.Element('message',
           from: @client.jid.toString()
@@ -216,6 +239,7 @@ class Gtalkbot extends Adapter
       @client.send message
 
   reply: (envelope, strings...) ->
+    console.log "^^^^^^^^^^ Gtalkbot reply start"
     for str in strings
       @send envelope, "#{str}"
 
